@@ -149,7 +149,7 @@ class Chess{
 	* @param string $coord координаты ячейки в формате буква+цифра (например "a2")
 	* @return mixed  Если координата валидная array('x'=>...,'y'=>...); иначе false
 	*/
-	public static function getPosition($coord)
+	private static function getPosition($coord)
 	{
 		if (strlen($coord) != 2) return false;
 		$y=$coord[0];
