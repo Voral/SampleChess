@@ -201,7 +201,7 @@ chess.init = function () {
 $(document).ready(function () {
 	tab.init();
 	chess.onLoad({});
-	$('#players').chessSlider({});
+	$('#players').chessSlider({values:[2,4]});
 	$('#deskwidth').chessSlider({values:[8,10,12,16]});
 	$('#deskheight').chessSlider({values:[8,10,12,16]});
 });
