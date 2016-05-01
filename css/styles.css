@@ -251,3 +251,13 @@ button:hover{
 #log-box li.active{
 	font-weight:bold;
 }
+article{
+	background:#5c3903;
+	text-align:center;
+	color:#fff;
+	padding:5px;
+	margin:0 -5px -5px;
+}
+article a{
+	color:#fff;
+}
