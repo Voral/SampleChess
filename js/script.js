@@ -1,5 +1,5 @@
 (function ($) {
-	var strID='chessSlider',sx=false,so=null;
+	var strID='chessSlider',sx=false,so=null,param = [];
 	
 	var onMouseDown=function(e){
 		e.stopPropagation();
@@ -52,6 +52,9 @@
 		el.data('parent').chessSlider('setValue',el.text());
 		return false;
 	};
+	var onTest = function(){
+		alert('1');
+	}
 	var methods = {
 		init: function (options) {
 			var config = $.extend({
@@ -64,6 +67,7 @@
 			},options);
 			return this.each(function () {
 				var $this = $(this), data = $this.data(strID);
+				param[$this.attr('id')]=$this;
 				if (!data) {
 					config.delta = 100 / (config.values.length-1);
 					var i,w,width=$this.width();
@@ -79,7 +83,16 @@
 					else if(config.current<0){
 						config.current=0;
 					}
-					config.scroll=$('<div/>',{'class':'scroll',css:{left:(config.current*config.delta)+'%'},data:{'parent':$this}}).mousedown(onMouseDown).mouseup(onMouseUp).mousemove(onMouseMove).mouseleave(onMouseUp);
+					config.scroll=$('<div/>',{'class':'scroll',css:{left:(config.current*config.delta)+'%'},data:{'parent':$this}})
+								.mousedown(onMouseDown)
+								.mouseup(onMouseUp)
+								.mousemove(onMouseMove)
+								.mouseleave(onMouseUp)
+								.bind('touchstart',onMouseDown)
+								.bind('touchend',onMouseUp)
+								.bind('touchmove',onMouseMove)
+						;
+						
 					$this.append(config.scroll);
 					$(this).data(strID, {
 						target: $this,
@@ -91,7 +104,7 @@
 		getValue: function ( ) {
 			var $this = $(this), data = $this.data(strID);	
 			if (data) {
-				return data.values[data.current];
+				return data.config.values[data.config.current];
 			}
 		},
 		setValue: function (value) { 
@@ -101,6 +114,13 @@
 				if (nValue>-1){
 					data.config.current=nValue;
 					data.config.scroll.css({left:(data.config.current*data.config.delta)+'%'});
+					if (typeof data.config.onChange == 'function'){
+						data.config.onChange(value);
+					};
+					chess.onLoad({
+						width:param['deskwidth'].chessSlider('getValue'),
+						height:param['deskheight'].chessSlider('getValue')
+					});
 				}
 			}
 		}
@@ -167,41 +187,67 @@ chess = {
 };
 chess.onLoad = function (option) {
 	$.extend(chess.config, option);
-	chess.desk = $('#desk');
+	chess.desk.empty();
+	chess.desk.attr('class','w'+chess.config.width+' '+'h'+chess.config.height);
 	var hRuler1 = $('<div/>', {id: 'rulerTop', class: 'h-ruler'}), hRuler2 = $('<div/>', {id: 'rulerBottom', class: 'h-ruler'});
 	var hRuler3 = $('<div/>', {id: 'rulerLeft', class: 'v-ruler'}), hRuler4 = $('<div/>', {id: 'rulerRight', class: 'v-ruler'});
 	var x, y;
 	for (x = 0; x < chess.config.width; ++x) {
 		hRuler1.append($('<div/>', {text: chess.abc[x]}));
 		hRuler2.append($('<div/>', {text: chess.abc[x]}));
-	}
-	;
+	};
 	for (y = chess.config.height; y > 0; --y) {
-		hRuler3.append($('<div/>', {text: y}));
-		hRuler4.append($('<div/>', {text: y}));
-	}
-	;
-	var deskin = $('<div/>', {id: 'deskin'}), i = 0;
-	for (x = 0; x < chess.config.width; ++x) {
-		for (y = chess.config.height; y > 0; --y) {
-			var className = ((i % 2) ? 'dark' : 'light'), cell = $('<div/>', {class: 'cell ' + className});
-			++i;
+		hRuler3.append($('<div/>').append($('<span/>', {text: y})));
+		hRuler4.append($('<div/>').append($('<span/>', {text: y})));
+	};
+	var deskin = $('<div/>', {id: 'deskin'});
+	for (y = chess.config.height-1;	y >= 0 ; --y) {
+		for (x = 0; x < chess.config.width ; ++x) {
+			var className = (((x+y+1) % 2) ? 'dark' : 'light'), cell = $('<div/>', {class: 'cell ' + className});
 			deskin.append(cell);
-		}
-		;
-		++i;
+		};
 	};
 
 	chess.desk.append(hRuler1).append(hRuler2).append(hRuler3).append(hRuler4).append(deskin);
 };
 chess.init = function () {
-
+	chess.desk = $('#desk');
 };
 
 $(document).ready(function () {
+	var edPlayers =	$('#players'),
+		edWidth = $('#deskwidth'),
+		edHeight = $('#deskheight');
+
+	var onPlayer = function(val){
+		if (val==4){
+			edWidth.chessSlider('setValue',16);
+		};
+	};
+	var onWidth = function(val){
+		if (val<16 && edPlayers.chessSlider('getValue')==4){
+			edPlayers.chessSlider('setValue',2);
+		};
+	};
 	tab.init();
+	chess.init();
 	chess.onLoad({});
-	$('#players').chessSlider({values:[2,4]});
-	$('#deskwidth').chessSlider({values:[8,10,12,16]});
-	$('#deskheight').chessSlider({values:[8,10,12,16]});
+	edPlayers.chessSlider({values:[2,4],onChange:onPlayer});
+	edWidth.chessSlider({values:[8,10,12,16],onChange:onWidth});
+	edHeight.chessSlider({values:[8,10,12,16]});
 });
+/*
+ * var ts;
+$(document).bind('touchstart', function (e){
+   ts = e.originalEvent.touches[0].clientY;
+});
+
+$(document).bind('touchend', function (e){
+   var te = e.originalEvent.changedTouches[0].clientY;
+   if(ts > te+5){
+      slide_down();
+   }else if(ts < te-5){
+      slide_up();
+   }
+});
+ */
